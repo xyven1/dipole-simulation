@@ -15,6 +15,8 @@ console_error_panic_hook = "=0.1.5"
 js-sys = "=0.3.6"
 nalgebra = "=0.25.3"
 wasm-bindgen = "=0.2.29"
+cgmath = "=0.17.0"
+rand = "=0.7.3"
 
 [dependencies.web-sys]
 version = "=0.3.6"

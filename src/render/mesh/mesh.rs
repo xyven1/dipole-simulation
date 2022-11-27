@@ -3,14 +3,15 @@ use crate::render::Render;
 use crate::render::TextureUnit;
 use crate::shader::Shader;
 use crate::shader::ShaderKind;
-use blender_mesh::BlenderMesh;
+use crate::webgl_object::WebGLObject;
 use nalgebra;
 use nalgebra::{Isometry3, Vector3};
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::*;
 
 pub struct Mesh<'a> {
-    pub mesh: &'a BlenderMesh,
+    pub object: &'a WebGLObject,
+    pub uvs: &'a Option<Vec<f32>>,
     pub shader: &'a Shader,
     pub opts: &'a MeshRenderOpts,
 }
@@ -32,7 +33,6 @@ impl<'a> Render<'a> for Mesh<'a> {
 
     fn buffer_attributes(&self, gl: &WebGlRenderingContext) {
         let shader = self.shader();
-        let mesh = self.mesh;
 
         let pos_attrib = gl.get_attrib_location(&shader.program, "position");
         let normal_attrib = gl.get_attrib_location(&shader.program, "normal");
@@ -42,21 +42,18 @@ impl<'a> Render<'a> for Mesh<'a> {
         gl.enable_vertex_attrib_array(normal_attrib as u32);
         gl.enable_vertex_attrib_array(uv_attrib as u32);
 
-        Mesh::buffer_f32_data(&gl, &mesh.vertex_positions[..], pos_attrib as u32, 3);
-        Mesh::buffer_f32_data(&gl, &mesh.vertex_normals[..], normal_attrib as u32, 3);
-        Mesh::buffer_f32_data(
-            &gl,
-            &mesh.vertex_uvs.as_ref().expect("Mesh uvs")[..],
-            uv_attrib as u32,
-            2,
-        );
-        Mesh::buffer_u16_indices(&gl, &mesh.vertex_position_indices[..]);
+        Mesh::buffer_f32_data(&gl, &self.object.vertices[..], pos_attrib as u32, 3);
+        Mesh::buffer_f32_data(&gl, &self.object.normals[..], normal_attrib as u32, 3);
+        match self.uvs {
+            Some(ref uvs) => Mesh::buffer_f32_data(&gl, &uvs[..], uv_attrib as u32, 2),
+            None => Mesh::buffer_f32_data(&gl, &[], uv_attrib as u32, 2),
+        }
+        Mesh::buffer_u16_indices(&gl, &self.object.indices[..]);
     }
 
     fn render(&self, gl: &WebGlRenderingContext, state: &State) {
         let shader = self.shader();
 
-        let mesh = self.mesh;
         let opts = self.opts;
         let pos = opts.pos;
 
@@ -90,7 +87,7 @@ impl<'a> Render<'a> for Mesh<'a> {
         let mut perspective = state.camera().projection();
         gl.uniform_matrix4fv_with_f32_array(perspective_uni.as_ref(), false, &mut perspective);
 
-        let num_indices = mesh.vertex_position_indices.len();
+        let num_indices = self.object.indices.len();
         gl.draw_elements_with_i32(GL::TRIANGLES, num_indices as i32, GL::UNSIGNED_SHORT, 0);
     }
 }

@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 use web_sys::*;
 
-static LINE_VS: &'static str = include_str!("./line-vertex.glsl");
-static LINE_FS: &'static str = include_str!("./line-fragment.glsl");
+static LINE_VS: &'static str = include_str!("./flat-vertex.glsl");
+static LINE_FS: &'static str = include_str!("./flat-fragment.glsl");
 
 static MESH_VS: &'static str = include_str!("./mesh-vertex.glsl");
 static MESH_FS: &'static str = include_str!("./mesh-fragment.glsl");
@@ -27,7 +27,7 @@ impl ShaderSystem {
         gl.use_program(Some(&mesh_shader.program));
 
         programs.insert(ShaderKind::Mesh, mesh_shader);
-        programs.insert(ShaderKind::Line, line_shader);
+        programs.insert(ShaderKind::Flat, line_shader);
 
 
         ShaderSystem {
@@ -57,7 +57,7 @@ impl ShaderSystem {
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum ShaderKind {
     Mesh,
-    Line,
+    Flat,
     Point,
 }
 

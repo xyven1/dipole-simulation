@@ -28,7 +28,8 @@ pub struct State {
     clock: f32,
     camera: Camera,
     mouse: Mouse,
-    show_scenery: bool
+    show_scenery: bool,
+    time_scale: f32,
 }
 
 impl State {
@@ -38,7 +39,8 @@ impl State {
             clock: 0.,
             camera: Camera::new(),
             mouse: Mouse::default(),
-            show_scenery: true
+            show_scenery: true,
+            time_scale: 1.,
         }
     }
 
@@ -53,6 +55,10 @@ impl State {
 
     pub fn show_scenery(&self) -> bool {
         self.show_scenery
+    }
+
+    pub fn time_scale(&self) -> f32 {
+        self.time_scale
     }
 
     pub fn msg(&mut self, msg: &Msg) {
@@ -88,6 +94,9 @@ impl State {
             Msg::ShowScenery(show_scenery) => {
                 self.show_scenery = *show_scenery;
             }
+            Msg::TimeScale(time_scale) => {
+                self.time_scale = *time_scale;
+            }
         }
     }
 }
@@ -115,4 +124,5 @@ pub enum Msg {
     MouseMove(i32, i32),
     Zoom(f32),
     ShowScenery(bool),
+    TimeScale(f32),
 }

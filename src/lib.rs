@@ -17,7 +17,7 @@
 #![deny(missing_docs)]
 
 extern crate wasm_bindgen;
-pub(in crate) use self::app::*;
+pub(crate) use self::app::*;
 use self::canvas::*;
 use self::controls::*;
 use self::render::*;
@@ -30,9 +30,11 @@ use web_sys::*;
 mod app;
 mod canvas;
 mod controls;
+mod generate_sphere;
 mod load_texture_img;
 mod render;
 mod shader;
+mod webgl_object;
 
 /// Used to run the application from the web
 #[wasm_bindgen]
@@ -63,11 +65,7 @@ impl WebClient {
     pub fn start(&self) -> Result<(), JsValue> {
         let gl = &self.gl;
 
-        load_texture_image(
-            Rc::clone(gl),
-            "/stone-texture.png",
-            TextureUnit::Stone,
-        );
+        load_texture_image(Rc::clone(gl), "/stone-texture.png", TextureUnit::Stone);
 
         Ok(())
     }
