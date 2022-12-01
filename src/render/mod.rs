@@ -56,7 +56,7 @@ impl WebRenderer {
     }
 
     pub fn render(&mut self, gl: &WebGlRenderingContext, state: &State, assets: &Assets) {
-        gl.clear_color(0.53, 0.8, 0.98, 1.);
+        gl.clear_color(0., 0., 0., 1.);
         gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
 
         let above = 1000000.0;
