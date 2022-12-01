@@ -22,7 +22,6 @@ use self::canvas::*;
 use self::controls::*;
 use self::render::*;
 use crate::load_texture_img::load_texture_image;
-use console_error_panic_hook;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use web_sys::*;
@@ -78,6 +77,12 @@ impl WebClient {
     /// Render the scene. `index.html` will call this once every requestAnimationFrame
     pub fn render(&mut self) {
         self.renderer
-            .render(&self.gl, &self.app.store.borrow().state, &self.app.assets());
+            .render(&self.gl, &self.app.store.borrow().state, self.app.assets());
+    }
+}
+
+impl Default for WebClient {
+    fn default() -> Self {
+        Self::new()
     }
 }

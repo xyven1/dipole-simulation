@@ -18,9 +18,7 @@ impl Store {
     }
 
     pub fn msg(&mut self, msg: &Msg) {
-        match msg {
-            _ => self.state.msg(msg),
-        }
+        self.state.msg(msg);
     }
 }
 

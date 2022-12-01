@@ -37,7 +37,7 @@ impl Camera {
 
     pub fn view_flipped_y(&self) -> [f32; 16] {
         let mut eye = self.get_eye_pos();
-        eye.y = -1.0 * eye.y;
+        eye.y *= -1.0;
 
         let target = Point3::new(0.0, 0.0, 0.0);
 
@@ -91,10 +91,6 @@ impl Camera {
     pub fn zoom(&mut self, zoom: f32) {
         self.orbit_radius += zoom;
 
-        if self.orbit_radius > 30. {
-            self.orbit_radius = 30.;
-        } else if self.orbit_radius < 5. {
-            self.orbit_radius = 5.;
-        }
+        self.orbit_radius = self.orbit_radius.clamp(5., 30.);
     }
 }

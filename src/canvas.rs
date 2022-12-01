@@ -7,7 +7,7 @@ use wasm_bindgen::JsValue;
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::*;
 
-pub static APP_DIV_ID: &'static str = "dipole-simulation";
+pub static APP_DIV_ID: &str = "dipole-simulation";
 
 pub static CANVAS_WIDTH: i32 = 512;
 pub static CANVAS_HEIGHT: i32 = 512;

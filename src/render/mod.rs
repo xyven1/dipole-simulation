@@ -1,4 +1,4 @@
-pub(self) use self::mesh::*;
+pub(self) use self::styles::*;
 pub(self) use self::render_trait::*;
 pub use self::texture_unit::*;
 use crate::app::Assets;
@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::*;
 
-mod mesh;
+mod styles;
 mod render_meshes;
 mod render_trait;
 mod texture_unit;
@@ -32,7 +32,7 @@ pub struct WebRenderer {
 
 impl WebRenderer {
     pub fn new(gl: &WebGlRenderingContext) -> WebRenderer {
-        let shader_sys = ShaderSystem::new(&gl);
+        let shader_sys = ShaderSystem::new(gl);
 
         let depth_texture_ext = gl
             .get_extension("WEBGL_depth_texture")
@@ -104,7 +104,7 @@ impl WebRenderer {
     fn bind_vao(&self, vao: &Vao) {
         let oes_vao_ext = &self.vao_ext.oes_vao_ext;
 
-        let bind_vao_ext = Reflect::get(&oes_vao_ext, &"bindVertexArrayOES".into())
+        let bind_vao_ext = Reflect::get(oes_vao_ext, &"bindVertexArrayOES".into())
             .expect("Create vao func")
             .into();
 

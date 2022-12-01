@@ -3,11 +3,11 @@ use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 use web_sys::*;
 
-static LINE_VS: &'static str = include_str!("./flat-vertex.glsl");
-static LINE_FS: &'static str = include_str!("./flat-fragment.glsl");
+static LINE_VS: &str = include_str!("./flat-vertex.glsl");
+static LINE_FS: &str = include_str!("./flat-fragment.glsl");
 
-static MESH_VS: &'static str = include_str!("./mesh-vertex.glsl");
-static MESH_FS: &'static str = include_str!("./mesh-fragment.glsl");
+static MESH_VS: &str = include_str!("./mesh-vertex.glsl");
+static MESH_FS: &str = include_str!("./mesh-fragment.glsl");
 
 /// Powers retrieving and using our shaders
 pub struct ShaderSystem {
@@ -20,15 +20,14 @@ impl ShaderSystem {
     pub fn new(gl: &WebGlRenderingContext) -> ShaderSystem {
         let mut programs = HashMap::new();
 
-        let mesh_shader = Shader::new(&gl, MESH_VS, MESH_FS).unwrap();
-        let line_shader = Shader::new(&gl, LINE_VS, LINE_FS).unwrap();
+        let mesh_shader = Shader::new(gl, MESH_VS, MESH_FS).unwrap();
+        let line_shader = Shader::new(gl, LINE_VS, LINE_FS).unwrap();
 
         let active_program = RefCell::new(ShaderKind::Mesh);
         gl.use_program(Some(&mesh_shader.program));
 
         programs.insert(ShaderKind::Mesh, mesh_shader);
         programs.insert(ShaderKind::Flat, line_shader);
-
 
         ShaderSystem {
             programs,
@@ -74,9 +73,9 @@ impl Shader {
         vert_shader: &str,
         frag_shader: &str,
     ) -> Result<Shader, JsValue> {
-        let vert_shader = compile_shader(&gl, WebGlRenderingContext::VERTEX_SHADER, vert_shader)?;
-        let frag_shader = compile_shader(&gl, WebGlRenderingContext::FRAGMENT_SHADER, frag_shader)?;
-        let program = link_program(&gl, &vert_shader, &frag_shader)?;
+        let vert_shader = compile_shader(gl, WebGlRenderingContext::VERTEX_SHADER, vert_shader)?;
+        let frag_shader = compile_shader(gl, WebGlRenderingContext::FRAGMENT_SHADER, frag_shader)?;
+        let program = link_program(gl, &vert_shader, &frag_shader)?;
 
         let uniforms = RefCell::new(HashMap::new());
 
@@ -97,7 +96,7 @@ impl Shader {
             uniforms.insert(
                 uniform_name.to_string(),
                 gl.get_uniform_location(&self.program, uniform_name)
-                    .expect(&format!(r#"Uniform '{}' not found"#, uniform_name)),
+                    .unwrap_or_else(|| panic!(r#"Uniform '{}' not found"#, uniform_name)),
             );
         }
 
@@ -140,8 +139,8 @@ fn link_program(
         .create_program()
         .ok_or_else(|| "Unable to create shader program".to_string())?;
 
-    gl.attach_shader(&program, &vert_shader);
-    gl.attach_shader(&program, &frag_shader);
+    gl.attach_shader(&program, vert_shader);
+    gl.attach_shader(&program, frag_shader);
 
     gl.link_program(&program);
 

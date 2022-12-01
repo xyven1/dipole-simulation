@@ -1,8 +1,5 @@
-use crate::generate_sphere;
 use crate::render::Flat;
 use crate::render::FlatRenderOpts;
-use crate::render::Mesh;
-use crate::render::MeshRenderOpts;
 use crate::render::Render;
 use crate::render::WebRenderer;
 use crate::shader::ShaderKind;
@@ -17,7 +14,7 @@ impl WebRenderer {
         gl: &GL,
         state: &State,
         assets: &Assets,
-        clip_plane: [f32; 4],
+        _clip_plane: [f32; 4],
         flip_camera_y: bool,
     ) {
         if !state.show_scenery() {
