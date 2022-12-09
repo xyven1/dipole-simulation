@@ -21,7 +21,6 @@ pub(crate) use self::app::*;
 use self::canvas::*;
 use self::controls::*;
 use self::render::*;
-use crate::load_texture_img::load_texture_image;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use web_sys::*;
@@ -30,9 +29,9 @@ mod app;
 mod canvas;
 mod controls;
 mod generate_sphere;
-mod load_texture_img;
 mod render;
 mod shader;
+mod simulation;
 mod webgl_object;
 
 /// Used to run the application from the web
@@ -64,14 +63,13 @@ impl WebClient {
     pub fn start(&self) -> Result<(), JsValue> {
         let gl = &self.gl;
 
-        load_texture_image(Rc::clone(gl), "/stone-texture.png", TextureUnit::Stone);
-
         Ok(())
     }
 
     /// Update our simulation
     pub fn update(&self, dt: f32) {
         self.app.store.borrow_mut().msg(&Msg::AdvanceClock(dt));
+        self.app.store.borrow_mut().msg(&Msg::UpdateSimulation(dt));
     }
 
     /// Render the scene. `index.html` will call this once every requestAnimationFrame

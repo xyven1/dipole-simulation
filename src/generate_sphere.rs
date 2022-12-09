@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 use std::ops::AddAssign;
 
-use cgmath::prelude::*;
-use cgmath::Vector3;
+use nalgebra::Vector3;
 
 const VERT_CACHE_PRECISION: f32 = 10000_f32;
 
@@ -126,8 +125,8 @@ impl Polyhedron {
 
         for i in 0..=cols {
             new_vertices.push(vec![]);
-            let aj = a.lerp(c, i as f32 / cols as f32);
-            let bj = b.lerp(c, i as f32 / cols as f32);
+            let aj = a.lerp(&c, i as f32 / cols as f32);
+            let bj: Vector3<f32> = b.lerp(&c, i as f32 / cols as f32);
             let rows = cols - i;
 
             for j in 0..=rows {
@@ -135,8 +134,8 @@ impl Polyhedron {
                     new_vertices[i].push(aj.normalize() * radius);
                 } else {
                     new_vertices[i].push(
-                        a.lerp(c, i as f32 / cols as f32)
-                            .lerp(bj, j as f32 / rows as f32)
+                        a.lerp(&c, i as f32 / cols as f32)
+                            .lerp(&bj, j as f32 / rows as f32)
                             .normalize()
                             * radius,
                     );

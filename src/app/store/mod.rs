@@ -1,3 +1,6 @@
+use crate::simulation::dipole::ChargeSimulation;
+use crate::simulation::dipole::DipoleSimulation;
+use crate::simulation::dipole::Simulatable;
 use std::ops::Deref;
 
 mod mouse;
@@ -26,6 +29,7 @@ pub struct State {
     clock: f32,
     camera: Camera,
     mouse: Mouse,
+    pub(crate) simulation: Box<dyn Simulatable>,
     show_scenery: bool,
     time_scale: f32,
 }
@@ -37,6 +41,8 @@ impl State {
             clock: 0.,
             camera: Camera::new(),
             mouse: Mouse::default(),
+            simulation: Box::new(DipoleSimulation::new(10000., 10000., 0.1, 0.1)),
+            // simulation: Box::new(ChargeSimulation::new()),
             show_scenery: true,
             time_scale: 1.,
         }
@@ -95,6 +101,9 @@ impl State {
             Msg::TimeScale(time_scale) => {
                 self.time_scale = *time_scale;
             }
+            Msg::UpdateSimulation(dt) => {
+                self.simulation.update(*dt as f64 * self.time_scale as f64);
+            }
         }
     }
 }
@@ -119,6 +128,7 @@ pub enum Msg {
     AdvanceClock(f32),
     MouseDown(i32, i32),
     MouseUp,
+    UpdateSimulation(f32),
     MouseMove(i32, i32),
     Zoom(f32),
     ShowScenery(bool),

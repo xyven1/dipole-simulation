@@ -10,10 +10,10 @@
 
     <script>
     window.addEventListener('load', function () {
-      window.wasm_bindgen('/dipole_simulation_bg.wasm')
+      wasm_bindgen('/dipole_simulation_bg.wasm')
         .then(function () {
           // Start our rust application. You can find `WebClient` in `src/lib.rs`
-          const webClient = new window.wasm_bindgen.WebClient()
+          const webClient = new wasm_bindgen.WebClient()
           webClient.start()
 
           let time = Date.now();

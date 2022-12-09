@@ -1,6 +1,5 @@
 pub(self) use self::styles::*;
 pub(self) use self::render_trait::*;
-pub use self::texture_unit::*;
 use crate::app::Assets;
 use crate::app::State;
 use crate::canvas::{CANVAS_HEIGHT, CANVAS_WIDTH};
@@ -14,7 +13,6 @@ use web_sys::*;
 mod styles;
 mod render_meshes;
 mod render_trait;
-mod texture_unit;
 
 struct VaoExtension {
     oes_vao_ext: js_sys::Object,
@@ -56,7 +54,7 @@ impl WebRenderer {
     }
 
     pub fn render(&mut self, gl: &WebGlRenderingContext, state: &State, assets: &Assets) {
-        gl.clear_color(0., 0., 0., 1.);
+        gl.clear_color(0., 0., 0., 0.5);
         gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
 
         let above = 1000000.0;

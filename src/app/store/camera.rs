@@ -14,9 +14,9 @@ impl Camera {
 
         Camera {
             projection: Perspective3::new(fovy, 1.0, 0.1, 50.0),
-            left_right_radians: 45.0f32.to_radians(),
-            up_down_radians: 80.0f32.to_radians(),
-            orbit_radius: 15.,
+            left_right_radians: 0.0f32.to_radians(),
+            up_down_radians: 00.0f32.to_radians(),
+            orbit_radius: 30.,
         }
     }
 
