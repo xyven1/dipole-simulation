@@ -1,8 +1,7 @@
 pub(self) use self::styles::*;
-pub(self) use self::render_trait::*;
+pub(crate) use self::render_trait::*;
 use crate::app::Assets;
 use crate::app::State;
-use crate::canvas::{CANVAS_HEIGHT, CANVAS_WIDTH};
 use crate::shader::ShaderSystem;
 use js_sys::Reflect;
 use std::cell::RefCell;
@@ -53,7 +52,7 @@ impl WebRenderer {
         }
     }
 
-    pub fn render(&mut self, gl: &WebGlRenderingContext, state: &State, assets: &Assets) {
+    pub fn render(&self, gl: &WebGlRenderingContext, state: &State, assets: &Assets) {
         gl.clear_color(0., 0., 0., 0.5);
         gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
 
@@ -61,7 +60,7 @@ impl WebRenderer {
         // Position is positive instead of negative for.. mathematical reasons..
         let clip_plane = [0., 1., 0., above];
 
-        gl.viewport(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        gl.viewport(0, 0, 512, 512);
 
         self.render_meshes(gl, state, assets, clip_plane, false);
     }

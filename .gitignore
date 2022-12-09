@@ -3,6 +3,7 @@
 Cargo.lock
 dipole_simulation.js
 dipole_simulation_bg.wasm
+/dist
 .idea
 .DS_Store
 
