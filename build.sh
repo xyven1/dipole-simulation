@@ -30,7 +30,7 @@ else
 
   # Build the webgl_water_tutorial.wasm file
   cargo build --target ${WASM_TARGET} --release &&
-  wasm-bindgen ./target/${WASM_TARGET}/release/dipole_simluation.wasm --out-dir . --no-typescript --no-modules &&
-  wasm-opt -O3 -o optimized.wasm dipole_simluation_bg.wasm  &&
-  mv optimized.wasm dipole_simluation_bg.wasm
+  wasm-bindgen ./target/${WASM_TARGET}/release/dipole_simulation.wasm --out-dir . --no-typescript --no-modules &&
+  wasm-opt -O3 -o optimized.wasm dipole_simulation_bg.wasm  &&
+  mv optimized.wasm dipole_simulation_bg.wasm
 fi

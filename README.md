@@ -19,3 +19,7 @@ cargo install -f wasm-bindgen-cli --version 0.2.29 # Or download a release binar
 ## Opens your browser to http://localhost:8000  where the demo will be running
 http -m wasm:application/wasm
 ```
+
+# Possible improvements
+- wasm-mt-pool for multi threading
+- using yew for front-end portion of site
