@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use nalgebra::Vector3;
+
 use crate::{generate_sphere, webgl_object::WebGLObject};
 
 #[derive(Default)]
@@ -12,13 +14,12 @@ impl Assets {
         let mut meshes: HashMap<String, WebGLObject> = HashMap::new();
 
         meshes.insert("Sphere".to_string(), Self::gen_sphere());
-        meshes.insert("Line".to_string(), Self::gen_line());
 
         Assets { meshes }
     }
 
     fn gen_sphere() -> WebGLObject {
-        let sphere = generate_sphere::Polyhedron::new_isocahedron(0.5, 3);
+        let sphere = generate_sphere::Polyhedron::new_isocahedron(0.5, 1);
         WebGLObject {
             vertices: sphere
                 .positions
@@ -38,9 +39,9 @@ impl Assets {
         }
     }
 
-    fn gen_line() -> WebGLObject {
+    pub fn gen_line(start: Vector3<f32>, end: Vector3<f32>) -> WebGLObject {
         WebGLObject {
-            vertices: vec![0., 0., 0., 2., 0., 0.],
+            vertices: vec![start.x, start.y, start.z, end.x, end.y, end.z],
             indices: vec![],
             normals: vec![],
         }

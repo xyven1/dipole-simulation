@@ -28,6 +28,7 @@ pub(crate) struct Dipole {
     charge: f64,
     offset: f64,
     moment: f64,
+    charges: [Charge; 2],
 }
 
 impl Dipole {
@@ -49,6 +50,20 @@ impl Dipole {
             charge,
             offset,
             moment: mass * offset * offset,
+            charges: [
+                Charge {
+                    mass: mass / 2.,
+                    position: position + orientation * offset / 2.,
+                    velocity,
+                    charge: charge / 2.,
+                },
+                Charge {
+                    mass: mass / 2.,
+                    position: position - orientation * offset / 2.,
+                    velocity,
+                    charge: charge / 2.,
+                },
+            ],
         }
     }
     fn force_torque(
@@ -179,6 +194,11 @@ impl Object for Charge {
 pub trait Simulatable {
     fn update(&mut self, dt: f64);
     fn get_objects(&self) -> Vec<&dyn Object>;
+    fn get_charges(&self) -> Vec<&Charge>;
+    fn get_field(&self, r: Vector3<f64>) -> Vector3<f64>;
+    fn get_total_momentum(&self) -> Vector3<f64>;
+    fn get_total_angular_momentum(&self) -> Vector3<f64>;
+    fn get_total_energy(&self) -> f64;
 }
 
 pub struct ChargeSimulation {
@@ -190,16 +210,16 @@ impl ChargeSimulation {
         Self {
             charges: vec![
                 Charge {
-                    mass: 5.,
+                    mass: 1.,
                     position: Vector3::new(0., 0., 0.),
-                    velocity: Vector3::new(-0.0002, 0., 0.),
-                    charge: 0.01,
+                    velocity: Vector3::new(-0.5, 0., 0.),
+                    charge: 5.0,
                 },
                 Charge {
-                    mass: 5.,
+                    mass: 1.,
                     position: Vector3::new(0., 10., 0.),
-                    velocity: Vector3::new(0.0002, 0., 0.),
-                    charge: -0.01,
+                    velocity: Vector3::new(0.5, 0., 0.),
+                    charge: -5.0,
                 },
             ],
         }
@@ -249,13 +269,53 @@ impl Simulatable for ChargeSimulation {
     fn get_objects(&self) -> Vec<&dyn Object> {
         self.charges.iter().map(|c| c as &dyn Object).collect()
     }
+    fn get_charges(&self) -> Vec<&Charge> {
+        self.charges.iter().collect()
+    }
+    fn get_field(&self, r: Vector3<f64>) -> Vector3<f64> {
+        let mut field = Vector3::zeros();
+        for c in self.charges.iter() {
+            field += coulomb(c.position, c.charge, r, 1.);
+        }
+        field
+    }
+    fn get_total_momentum(&self) -> Vector3<f64> {
+        let mut total = Vector3::zeros();
+        for c in self.charges.iter() {
+            total += c.velocity * c.mass;
+        }
+        total
+    }
+
+    fn get_total_angular_momentum(&self) -> Vector3<f64> {
+        let mut total = Vector3::zeros();
+        for c in self.charges.iter() {
+            total += c.position.cross(&c.velocity) * c.mass;
+        }
+        total
+    }
+
+    fn get_total_energy(&self) -> f64 {
+        let mut total = 0.;
+        for charge in self.charges.iter() {
+            total += charge.velocity.norm_squared() * charge.mass / 2.;
+        }
+        for i in 0..self.charges.len() - 1 {
+            let c = &self.charges[i];
+            for i in (i + 1)..self.charges.len() {
+                let other = &self.charges[i];
+                total += K * c.charge * other.charge / (c.position - other.position).norm();
+            }
+        }
+        total
+    }
 }
 
 pub struct DipoleSimulation {
     dipoles: Vec<Dipole>,
 }
 
-static K: f64 = 1.0;
+static K: f64 = 2.0;
 
 impl DipoleSimulation {
     pub(crate) fn new(mass1: f64, mass2: f64, charge1: f64, charge2: f64) -> DipoleSimulation {
@@ -268,7 +328,7 @@ impl DipoleSimulation {
                     Vector3::new(1., 0., 0.),
                     Vector3::zeros(),
                     charge1,
-                    1.,
+                    0.1,
                 ),
                 Dipole::new(
                     mass2,
@@ -277,7 +337,7 @@ impl DipoleSimulation {
                     Vector3::new(0., 1., 0.),
                     Vector3::zeros(),
                     charge2,
-                    1.,
+                    0.1,
                 ),
             ],
         }
@@ -291,6 +351,12 @@ fn rotate(orientation: Vector3<f64>, omega: Vector3<f64>) -> Vector3<f64> {
 
 impl Simulatable for DipoleSimulation {
     fn update(&mut self, dt: f64) {
+        if dt == 0. {
+            return;
+        }
+
+        web_sys::console::log_1(&format!("dt: {}", dt).into());
+
         for index in 0..self.dipoles.len() {
             let dipole = &self.dipoles[index];
             let (k1v, l1v) = dipole.force_torque(dipole.position, dipole.orientation, self, index);
@@ -343,8 +409,73 @@ impl Simulatable for DipoleSimulation {
             dipole.update(d_pos, d_vel, d_orient, d_ang_vel);
         }
     }
-
     fn get_objects(&self) -> Vec<&dyn Object> {
         self.dipoles.iter().map(|c| c as &dyn Object).collect()
+    }
+    fn get_charges(&self) -> Vec<&Charge> {
+        self.dipoles
+            .iter()
+            .map(|d| vec![&d.charges[0], &d.charges[1]])
+            .flatten()
+            .collect()
+    }
+    fn get_field(&self, r: Vector3<f64>) -> Vector3<f64> {
+        let mut field = Vector3::zeros();
+        for d in self.dipoles.iter() {
+            field += coulomb(d.position - d.orientation * d.offset, -d.charge, r, 1.);
+            field += coulomb(d.position + d.orientation * d.offset, d.charge, r, 1.);
+        }
+        field
+    }
+    fn get_total_angular_momentum(&self) -> Vector3<f64> {
+        let mut total = Vector3::zeros();
+        for dipole in self.dipoles.iter() {
+            total += dipole.moment * dipole.angular_velocity;
+            total += dipole.position.cross(&dipole.velocity) * dipole.mass;
+        }
+        total
+    }
+    fn get_total_momentum(&self) -> Vector3<f64> {
+        let mut total = Vector3::zeros();
+        for dipole in self.dipoles.iter() {
+            total += dipole.velocity * dipole.mass;
+        }
+        total
+    }
+    fn get_total_energy(&self) -> f64 {
+        let mut total = 0.;
+        for dipole in self.dipoles.iter() {
+            total += dipole.mass * dipole.velocity.norm_squared() / 2.;
+            total += dipole.moment * dipole.angular_velocity.norm_squared() / 2.;
+        }
+
+        let charges = self
+            .dipoles
+            .iter()
+            .flat_map(|d| {
+                vec![
+                    Charge {
+                        position: d.position - d.orientation * d.offset,
+                        charge: -d.charge,
+                        mass: 0.,
+                        velocity: Vector3::zeros(),
+                    },
+                    Charge {
+                        position: d.position + d.orientation * d.offset,
+                        charge: d.charge,
+                        mass: 0.,
+                        velocity: Vector3::zeros(),
+                    },
+                ]
+            })
+            .collect::<Vec<_>>();
+        for i in 0..charges.len() - 1 {
+            let c = &charges[i];
+            for i in (i + 1)..charges.len() {
+                let other = &charges[i];
+                total += K * c.charge * other.charge / (c.position - other.position).norm();
+            }
+        }
+        total
     }
 }

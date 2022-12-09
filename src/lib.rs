@@ -70,6 +70,11 @@ impl WebClient {
     pub fn update(&self, dt: f32) {
         self.app.store.borrow_mut().msg(&Msg::AdvanceClock(dt));
         self.app.store.borrow_mut().msg(&Msg::UpdateSimulation(dt));
+        let l = self.app.store.borrow().state.simulation.get_total_angular_momentum();
+        let p = self.app.store.borrow().state.simulation.get_total_momentum();
+        let e = self.app.store.borrow().state.simulation.get_total_energy();
+
+        web_sys::console::log_1(&format!("L: {:?}, P: {:?}, E: {:?}", l, p, e).into());
     }
 
     /// Render the scene. `index.html` will call this once every requestAnimationFrame

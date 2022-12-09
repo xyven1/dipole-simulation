@@ -20,7 +20,7 @@
           function render () {
             const dt = Date.now() - time
 
-            webClient.update(dt)
+            webClient.update(dt/1000)
             webClient.render()
             window.requestAnimationFrame(render)
 

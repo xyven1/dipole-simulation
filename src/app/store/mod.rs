@@ -41,7 +41,7 @@ impl State {
             clock: 0.,
             camera: Camera::new(),
             mouse: Mouse::default(),
-            simulation: Box::new(DipoleSimulation::new(10000., 10000., 0.1, 0.1)),
+            simulation: Box::new(DipoleSimulation::new(1., 1., 1., 1.)),
             // simulation: Box::new(ChargeSimulation::new()),
             show_scenery: true,
             time_scale: 1.,

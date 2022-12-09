@@ -19,6 +19,8 @@ if [ -z "$RELEASE"  ]; then
   # # JavaScript glue code to run it in the browser.
   wasm-bindgen ./target/${WASM_TARGET}/debug/dipole_simulation.wasm --out-dir . --no-typescript --no-modules
 
+  http
+
 # RELEASE=1 ./build.sh
 else
 
