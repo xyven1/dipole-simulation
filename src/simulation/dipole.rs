@@ -22,8 +22,10 @@ pub trait Object {
 pub(crate) struct Dipole {
     mass: f64,
     position: Vector3<f64>,
+    _position: Vector3<f64>,
     velocity: Vector3<f64>,
     orientation: Vector3<f64>,
+    _orientation: Vector3<f64>,
     angular_velocity: Vector3<f64>,
     charge: f64,
     offset: f64,
@@ -44,8 +46,10 @@ impl Dipole {
         Self {
             mass,
             position,
+            _position: position,
             velocity,
             orientation,
+            _orientation: orientation,
             angular_velocity,
             charge,
             offset,
@@ -65,6 +69,12 @@ impl Dipole {
                 },
             ],
         }
+    }
+    fn reset(&mut self) {
+        self.position = self._position;
+        self.orientation = self._orientation;
+        self.velocity = Vector3::zeros();
+        self.angular_velocity = Vector3::zeros();
     }
     fn force_torque(
         &self,
@@ -107,6 +117,13 @@ impl Dipole {
             torque += (dst_positive - r).cross(&interaction);
         }
         (force, torque)
+    }
+    fn set_offset(&mut self, offset: f64) {
+        if offset <= 0. {
+            return;
+        }
+        self.offset = offset;
+        self.moment = self.mass * offset * offset;
     }
 }
 
@@ -192,7 +209,9 @@ impl Object for Charge {
 }
 
 pub trait Simulatable {
+    fn reset(&mut self);
     fn update(&mut self, dt: f64);
+    fn set_offset(&mut self, offset: f64);
     fn get_objects(&self) -> Vec<&dyn Object>;
     fn get_charges(&self) -> Vec<&Charge>;
     fn get_field(&self, r: Vector3<f64>) -> Vector3<f64>;
@@ -227,6 +246,7 @@ impl ChargeSimulation {
 }
 
 impl Simulatable for ChargeSimulation {
+    fn reset(&mut self) {}
     fn update(&mut self, dt: f64) {
         // niave approach
         /* for charge in 0..self.charges.len() {
@@ -309,6 +329,8 @@ impl Simulatable for ChargeSimulation {
         }
         total
     }
+
+    fn set_offset(&mut self, offset: f64) {}
 }
 
 pub struct DipoleSimulation {
@@ -350,6 +372,11 @@ fn rotate(orientation: Vector3<f64>, omega: Vector3<f64>) -> Vector3<f64> {
 }
 
 impl Simulatable for DipoleSimulation {
+    fn reset(&mut self) {
+        for dipole in self.dipoles.iter_mut() {
+            dipole.reset();
+        }
+    }
     fn update(&mut self, dt: f64) {
         if dt == 0. {
             return;
@@ -477,5 +504,10 @@ impl Simulatable for DipoleSimulation {
             }
         }
         total
+    }
+    fn set_offset(&mut self, offset: f64) {
+        for dipole in self.dipoles.iter_mut() {
+            dipole.set_offset(offset);
+        }
     }
 }

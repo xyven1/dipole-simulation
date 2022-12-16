@@ -128,7 +128,7 @@ fn render_dipole(
     };
 
     let line_name = format!("Line{}", offset);
-    let object = Assets::gen_line(positive_pos.cast(), negative_pos.cast());
+    let object = Assets::gen_line(Vector3::new(-offset, 0., 0.), Vector3::new(offset, 0., 0.));
     let line = Flat {
         object: &object,
         shader,

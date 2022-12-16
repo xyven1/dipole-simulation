@@ -26,19 +26,42 @@ pub fn append_controls(app: Rc<App>) -> Result<(), JsValue> {
     let controls: Element = controls.dyn_into()?;
 
     // Render Scenery
-    {
+    /* {
         let app = Rc::clone(&app);
         let show_scenery_control = create_show_scenery_control(app)?;
         controls.append_child(&show_scenery_control)?;
-    }
+    } */
     {
         let app = Rc::clone(&app);
         let time_scale_slider = create_time_scale_control(app)?;
         controls.append_child(&time_scale_slider)?;
     }
+    {
+        let app = Rc::clone(&app);
+        let offset = create_offset_scale_control(app)?;
+        controls.append_child(&offset)?;
+    }
+    {
+        let app = Rc::clone(&app);
+        let reset = create_reset_button(app)?;
+        controls.append_child(&reset)?;
+    }
     Ok(())
 }
+fn create_reset_button(app: Rc<App>) -> Result<HtmlElement, JsValue> {
+    let handler = move |_event: web_sys::Event| {
+        app.store.borrow_mut().msg(&Msg::ResetSimulation);
+    };
+    let closure = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
 
+    let reset_button = Button {
+        label: "Reset",
+        closure,
+    }
+    .create_element()?;
+
+    Ok(reset_button)
+}
 fn create_show_scenery_control(app: Rc<App>) -> Result<HtmlElement, JsValue> {
     let handler = move |event: web_sys::Event| {
         let input_elem: HtmlInputElement = event.target().unwrap().dyn_into().unwrap();
@@ -80,6 +103,49 @@ fn create_time_scale_control(app: Rc<App>) -> Result<HtmlElement, JsValue> {
     .create_element()?;
 
     Ok(time_scale_control)
+}
+
+fn create_offset_scale_control(app: Rc<App>) -> Result<HtmlElement, JsValue> {
+    let handler = move |event: web_sys::Event| {
+        let input_elem: HtmlInputElement = event.target().unwrap().dyn_into().unwrap();
+        let offset = input_elem.value_as_number();
+
+        app.store.borrow_mut().msg(&Msg::Offset(offset as f32));
+    };
+    let closure = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
+
+    let offset_slider = Slider {
+        start: 1.0,
+        min: 0.0,
+        max: 10.0,
+        step: 0.1,
+        label: "Dipole offset",
+        closure,
+    }
+    .create_element()?;
+
+    Ok(offset_slider)
+}
+
+struct Button {
+    label: &'static str,
+    closure: Closure<dyn FnMut(web_sys::Event)>,
+}
+
+impl Button {
+    fn create_element(self) -> Result<HtmlElement, JsValue> {
+        let window = window().unwrap();
+        let document = window.document().unwrap();
+
+        let button = document.create_element("button")?;
+        let button: HtmlElement = button.dyn_into()?;
+        button.set_inner_html(self.label);
+        let closure = self.closure;
+        button.set_onclick(Some(closure.as_ref().unchecked_ref()));
+        closure.forget();
+
+        Ok(button)
+    }
 }
 
 struct Checkbox {

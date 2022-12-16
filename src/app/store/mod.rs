@@ -104,6 +104,12 @@ impl State {
             Msg::UpdateSimulation(dt) => {
                 self.simulation.update(*dt as f64 * self.time_scale as f64);
             }
+            Msg::Offset(offset) => {
+                self.simulation.set_offset(*offset as f64);
+            }
+            Msg::ResetSimulation => {
+                self.simulation.reset();
+            }
         }
     }
 }
@@ -133,4 +139,6 @@ pub enum Msg {
     Zoom(f32),
     ShowScenery(bool),
     TimeScale(f32),
+    Offset(f32),
+    ResetSimulation,
 }
