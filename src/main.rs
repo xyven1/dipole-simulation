@@ -1,3 +1,4 @@
+use std::cell::Cell;
 use std::{cell::RefCell, rc::Rc};
 
 use rand::prelude::*;
@@ -14,23 +15,24 @@ mod webgl_object;
 use crate::app::*;
 use crate::render::*;
 
-#[derive(PartialEq, Debug, Copy, Clone)]
-pub struct Simulation {
+#[derive(PartialEq, Debug)]
+pub struct SimulationState {
     time_scale: f64,
     current_time: f64,
 }
 
+type CanvasCallback = Callback<Rc<Option<WebGlRenderingContext>>>;
+
 #[derive(Properties, PartialEq)]
 pub struct CanvasProps {
-    pub simulation: Simulation,
-    pub on_render: Callback<(Rc<Option<WebGlRenderingContext>>, Simulation)>,
+    pub on_init: CanvasCallback,
+    pub on_render: CanvasCallback,
 }
 
 pub struct Canvas {
     node_ref: NodeRef,
     gl: Rc<Option<WebGlRenderingContext>>,
-    simulation: Rc<RefCell<Simulation>>,
-    on_render: Callback<(Rc<Option<WebGlRenderingContext>>, Simulation)>,
+    on_render: CanvasCallback,
 }
 
 impl Component for Canvas {
@@ -41,15 +43,11 @@ impl Component for Canvas {
         Self {
             node_ref: NodeRef::default(),
             gl: Rc::new(None),
-            simulation: Rc::new(RefCell::new(ctx.props().simulation)),
             on_render: ctx.props().on_render.clone(),
         }
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        self.simulation
-            .borrow_mut()
-            .clone_from(&ctx.props().simulation);
         html! {
             <canvas width="512" height="512" ref={self.node_ref.clone()} />
         }
@@ -67,6 +65,7 @@ impl Component for Canvas {
             .dyn_into::<WebGlRenderingContext>()
             .unwrap();
         self.gl = Rc::new(Some(gl));
+        ctx.props().on_init.emit(self.gl.clone());
         self.render();
     }
 }
@@ -77,21 +76,12 @@ impl Canvas {
 
         let gl = self.gl.clone();
         let render_cb = self.on_render.clone();
-        let simulation = self.simulation.clone();
-
-        let renderer = gl.as_ref().as_ref().map(WebRenderer::new);
-        let assets = Rc::new(Assets::new());
-        let store = Rc::new(RefCell::new(Store::new()));
 
         *cb.borrow_mut() = Some(Closure::wrap(Box::new({
             let cb = cb.clone();
             move || {
-                /* if let Ok(simulation) = simulation.try_borrow() {
-                    render_cb.emit((gl.clone(), *simulation));
-                    web_sys::console::log_1(&format!("sim: {:?}", simulation).into());
-                } */
-                render_cb.emit((gl.clone(), *simulation.borrow()));
-                if let Some(renderer) = &renderer {
+                render_cb.emit(gl.clone());
+                /* if let Some(renderer) = &renderer {
                     store.borrow_mut().msg(&Msg::UpdateSimulation(1.0));
                     let l = store.borrow().state.simulation.get_total_angular_momentum();
                     let p = store.borrow().state.simulation.get_total_momentum();
@@ -103,7 +93,7 @@ impl Canvas {
                         &store.borrow().state,
                         assets.as_ref(),
                     );
-                }
+                } */
                 Canvas::request_animation_frame(cb.borrow().as_ref().unwrap());
             }
         }) as Box<dyn FnMut()>));
@@ -119,31 +109,110 @@ impl Canvas {
     }
 }
 
-#[function_component]
-fn App() -> Html {
+pub struct MainAppReal {
+    time_scale: f64,
+    current_time: f64,
+    renderer: Rc<RefCell<Option<WebRenderer>>>,
+    gl: Rc<RefCell<Rc<Option<WebGlRenderingContext>>>>,
+    assets: Rc<Assets>,
+    state: Rc<RefCell<Store>>,
+    on_init: CanvasCallback,
+    on_render: CanvasCallback,
+}
+
+impl Component for MainAppReal {
+    type Properties = ();
+    type Message = ();
+
+    fn create(ctx: &Context<Self>) -> Self {
+        let gl = Rc::new(RefCell::new(Rc::new(None)));
+        let renderer = Rc::new(RefCell::new(None));
+        let assets = Rc::new(Assets::new());
+        let store = Rc::new(RefCell::new(Store::new()));
+
+        let on_init = {
+            let app_gl = gl.clone();
+            let app_renderer = renderer.clone();
+            Callback::from(move |gl: Rc<Option<WebGlRenderingContext>>| {
+                web_sys::console::log_1(&"on_init".into());
+                *app_gl.borrow_mut() = gl.clone();
+                *app_renderer.borrow_mut() = Some(WebRenderer::new(gl.as_ref().as_ref().unwrap()));
+            })
+        };
+        let on_render = {
+            let app_renderer = renderer.clone();
+            let app_assets = assets.clone();
+            let app_store = store.clone();
+            Callback::from(move |gl: Rc<Option<WebGlRenderingContext>>| {
+                if let Some(renderer) = &*app_renderer.borrow() {
+                    app_store.borrow_mut().msg(&Msg::UpdateSimulation(1.0));
+                    renderer.render(
+                        gl.as_ref().as_ref().unwrap(),
+                        &app_store.borrow().state,
+                        app_assets.as_ref(),
+                    );
+                }
+            })
+        };
+        Self {
+            time_scale: 1.0,
+            current_time: 0.0,
+            renderer,
+            gl,
+            on_init,
+            on_render,
+            assets,
+            state: store,
+        }
+    }
+
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let state = self.state.clone();
+        let onclick = ctx.link().callback(move |_| {
+            state.borrow_mut().msg(&Msg::UpdateSimulation(1.0));
+        });
+        html! {
+            <div>
+                <Canvas on_init={self.on_init.clone()} on_render={self.on_render.clone()} />
+                <button onclick={onclick}>{"Update"}</button>
+            </div>
+        }
+    }
+}
+
+// #[function_component]
+/* fn App() -> Html {
     let simulation = use_state_eq(|| Simulation {
         time_scale: 1.0,
         current_time: 0.0,
     });
+    let sim = simulation.clone();
 
-    let on_render = Callback::from(
-        move |(gl, sim): (Rc<Option<WebGlRenderingContext>>, Simulation)| {
-            if let Some(gl) = gl.as_ref() {
-                gl.clear_color(
-                    (sim.current_time / 100.0).clamp(0.0, 1.0) as f32,
-                    rand::thread_rng().gen_range(0.0..1.0) as f32,
-                    0.0,
-                    1.0,
-                );
-                gl.clear(WebGlRenderingContext::COLOR_BUFFER_BIT);
-            }
-        },
-    );
+    let renderer: Rc<RefCell<WebRenderer>>;
+    let on_init: CanvasCallback = Callback::from(move |gl: Rc<Option<WebGlRenderingContext>>| {
+        let gl = gl.as_ref().as_ref().unwrap();
+        //init app
+        app = Rc::new(RefCell::new(app::App::new()));
+        //init renderer
+        renderer = Rc::new(RefCell::new(WebRenderer::new(gl)));
+    });
+
+    let on_render: CanvasCallback = Callback::from(move |gl: Rc<Option<WebGlRenderingContext>>| {
+        if let Some(gl) = gl.as_ref() {
+            gl.clear_color(
+                (sim.current_time / 100.0).clamp(0.0, 1.0) as f32,
+                rand::thread_rng().gen_range(0.0..1.0) as f32,
+                0.0,
+                1.0,
+            );
+            gl.clear(WebGlRenderingContext::COLOR_BUFFER_BIT);
+        }
+    });
 
     let sim0 = simulation.clone();
     html! {
         <div>
-            <Canvas simulation={*sim0} on_render={on_render.clone()} />
+            <Canvas on_render={on_render} on_init={on_init} />
                 <button onclick={Callback::from(move |_| {
                     sim0.set(Simulation{
                         time_scale: 1.0,
@@ -156,8 +225,8 @@ fn App() -> Html {
             <p>{ "The current time is: "} {simulation.current_time}</p>
         </div>
     }
-}
+} */
 
 fn main() {
-    yew::Renderer::<App>::new().render();
+    yew::Renderer::<MainAppReal>::new().render();
 }
