@@ -5,7 +5,7 @@ This project was developed for the simulation of dipole moments in a way which i
 
 As this simulation does not account for any replusive or normal forces between objects the dipoles eventually converge which results in the simulation failing. This can be tracked via the momentum and energy readouts, which report the current state of the simulation. In cases were more accuracy could correct the divergence, it would be possible to address the issue by using different methods of solving the differential equations such as Verlet integration which is energy conserving (as far as the mean is concerned), [csRKN](https://arxiv.org/pdf/1808.08451.pdf), or simply adaptive Runga Kutta for more accuracy in edge cases, but the reality is that at some point all methods will fail as the forces become infinite without some model of normal or repulsive forces.
 
-
+The momentum and energy read outs are absolute, the timescale and offse sliders work while the simulation is running, and the reset button only resets the dipole position, orientation, and related velocities.
 ![image](https://user-images.githubusercontent.com/35360746/208027997-0c61bb40-ca53-4157-b41f-013a268d8534.png)
 # Instructions for compiling and running
 ```sh
