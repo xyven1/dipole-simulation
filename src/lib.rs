@@ -52,6 +52,7 @@ impl WebClient {
 
         let gl = Rc::new(create_webgl_context(Rc::clone(&app)).unwrap());
         append_controls(Rc::clone(&app)).expect("Append controls");
+        append_values(Rc::clone(&app)).expect("Append values");
 
         let renderer = WebRenderer::new(&gl);
 
@@ -74,7 +75,9 @@ impl WebClient {
         let p = self.app.store.borrow().state.simulation.get_total_momentum();
         let e = self.app.store.borrow().state.simulation.get_total_energy();
 
-        web_sys::console::log_1(&format!("L: {:?}, P: {:?}, E: {:?}", l, p, e).into());
+        update_values(self.app.clone(), l, p, e);
+
+        // web_sys::console::log_1(&format!("L: {:?}, P: {:?}, E: {:?}", l, p, e).into());
     }
 
     /// Render the scene. `index.html` will call this once every requestAnimationFrame

@@ -79,12 +79,12 @@ impl Camera {
         // 0.1 <= radians <= PI / 2.1
         // in order to restrict the camera's up/down orbit motion
 
-        if self.up_down_radians - (PI / 2.1) > 0. {
-            self.up_down_radians = PI / 2.1;
+        if self.up_down_radians - (PI / 2.0) > 0. {
+            self.up_down_radians = PI / 2.000001;
         }
 
-        if self.up_down_radians - 0.1 < 0. {
-            self.up_down_radians = 0.1;
+        if self.up_down_radians + (PI / 2.0) < 0. {
+            self.up_down_radians = -PI / 2.00001;
         }
     }
 

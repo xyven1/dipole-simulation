@@ -1,6 +1,7 @@
 use crate::canvas::APP_DIV_ID;
 use crate::App;
 use crate::Msg;
+use nalgebra::Vector3;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -9,6 +10,31 @@ use web_sys::window;
 use web_sys::Element;
 use web_sys::HtmlElement;
 use web_sys::HtmlInputElement;
+
+pub fn append_values(app: Rc<App>) -> Result<(), JsValue> {
+    let window = window().unwrap();
+    let document = window.document().unwrap();
+
+    let container: HtmlElement = match document.get_element_by_id(APP_DIV_ID) {
+        Some(container) => container.dyn_into().expect("Html element"),
+        None => document.body().expect("Document body"),
+    };
+
+    Ok(())
+}
+
+pub fn update_values(app: Rc<App>, l: Vector3<f64>, p: Vector3<f64>, e: f64) {
+    let window = window().unwrap();
+    let document = window.document().unwrap();
+
+    let angular_momentum = document.get_element_by_id("angular_momentum").unwrap();
+    let momentum = document.get_element_by_id("momentum").unwrap();
+    let energy = document.get_element_by_id("energy").unwrap();
+
+    angular_momentum.set_inner_html(&format!("({:.5}, {:.5}, {:.5})", l.x, l.y, l.z));
+    momentum.set_inner_html(&format!("({:.5}, {:.5}, {:.5})", p.x, p.y, p.z));
+    energy.set_inner_html(&format!("{:.5}", e));
+}
 
 pub fn append_controls(app: Rc<App>) -> Result<(), JsValue> {
     let window = window().unwrap();
@@ -46,6 +72,28 @@ pub fn append_controls(app: Rc<App>) -> Result<(), JsValue> {
         let reset = create_reset_button(app)?;
         controls.append_child(&reset)?;
     }
+    //append readouts
+    let angular_momentum_labal = document.create_element("p")?;
+    angular_momentum_labal.set_inner_html("Angular Momentum: ");
+    let angular_momentum = document.create_element("span")?;
+    angular_momentum.set_id("angular_momentum");
+    angular_momentum_labal.append_child(&angular_momentum)?;
+    controls.append_child(&angular_momentum_labal)?;
+
+    let momentum = document.create_element("p")?;
+    momentum.set_inner_html("Momentum: ");
+    let momentum_value = document.create_element("span")?;
+    momentum_value.set_id("momentum");
+    momentum.append_child(&momentum_value)?;
+    controls.append_child(&momentum)?;
+
+    let energy = document.create_element("p")?;
+    energy.set_inner_html("Energy: ");
+    let energy_value = document.create_element("span")?;
+    energy_value.set_id("energy");
+    energy.append_child(&energy_value)?;
+    controls.append_child(&energy)?;
+
     Ok(())
 }
 fn create_reset_button(app: Rc<App>) -> Result<HtmlElement, JsValue> {

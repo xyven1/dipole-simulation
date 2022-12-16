@@ -169,6 +169,68 @@ fn render_charge(
     sphere.render(gl, state);
 }
 
+fn render_axis(web: &WebRenderer, gl: &GL, state: &State, assets: &Assets, flip_camera_y: bool) {
+    let shader = web.shader_sys.get_shader(&ShaderKind::Flat).unwrap();
+    web.shader_sys.use_program(gl, ShaderKind::Flat);
+
+    let line_opts = FlatRenderOpts {
+        pos: Vector3::zeros(),
+        orient: Vector3::zeros(),
+        color: Vector3::new(1., 0., 0.),
+        flip_camera_y,
+        as_lines: true,
+    };
+
+    let line_name = "LineX";
+    let object = Assets::gen_line(Vector3::new(-10., 0., 0.), Vector3::new(10., 0., 0.));
+    let line = Flat {
+        object: &object,
+        shader,
+        opts: &line_opts,
+    };
+
+    web.prepare_for_render(gl, &line, line_name);
+    line.render(gl, state);
+
+    let line_opts = FlatRenderOpts {
+        pos: Vector3::zeros(),
+        orient: Vector3::zeros(),
+        color: Vector3::new(0., 1., 0.),
+        flip_camera_y,
+        as_lines: true,
+    };
+
+    let line_name = "LineY";
+    let object = Assets::gen_line(Vector3::new(0., -10., 0.), Vector3::new(0., 10., 0.));
+    let line = Flat {
+        object: &object,
+        shader,
+        opts: &line_opts,
+    };
+
+    web.prepare_for_render(gl, &line, line_name);
+    line.render(gl, state);
+
+    let line_opts = FlatRenderOpts {
+        pos: Vector3::zeros(),
+        orient: Vector3::zeros(),
+        color: Vector3::new(0., 0., 1.),
+        flip_camera_y,
+        as_lines: true,
+    };
+
+    let line_name = "LineZ";
+    let object = Assets::gen_line(Vector3::new(0., 0., -10.), Vector3::new(0., 0., 10.));
+    let line = Flat {
+        object: &object,
+        shader,
+        opts: &line_opts,
+    };
+
+    web.prepare_for_render(gl, &line, line_name);
+    line.render(gl, state);
+}
+
 impl WebRenderer {
     pub(in crate::render) fn render_meshes(
         &self,
@@ -189,6 +251,8 @@ impl WebRenderer {
                 }
             }
         } */
+
+        render_axis(self, gl, state, assets, flip_camera_y);
 
         for object in state.simulation.get_objects() {
             match object.get_type() {

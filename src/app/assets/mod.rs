@@ -14,6 +14,7 @@ impl Assets {
         let mut meshes: HashMap<String, WebGLObject> = HashMap::new();
 
         meshes.insert("Sphere".to_string(), Self::gen_sphere());
+        meshes.insert("Axis".to_string(), Self::gen_axis());
 
         Assets { meshes }
     }
@@ -51,5 +52,35 @@ impl Assets {
 
     pub fn get_mesh(&self, mesh_name: &str) -> Option<&WebGLObject> {
         self.meshes.get(mesh_name)
+    }
+
+    fn gen_axis() -> WebGLObject {
+        let mut vertices = Vec::new();
+        let mut indices = Vec::new();
+        let mut normals = Vec::new();
+
+        let x = Vector3::new(1.0, 0.0, 0.0);
+        let y = Vector3::new(0.0, 1.0, 0.0);
+        let z = Vector3::new(0.0, 0.0, 1.0);
+
+        let x_end = x * 10.0;
+        let y_end = y * 10.0;
+        let z_end = z * 10.0;
+
+        vertices.extend_from_slice(x_end.as_slice());
+        vertices.extend_from_slice(y_end.as_slice());
+        vertices.extend_from_slice(z_end.as_slice());
+
+        indices.extend_from_slice(&[0, 1, 1, 2]);
+
+        normals.extend_from_slice(x.as_slice());
+        normals.extend_from_slice(y.as_slice());
+        normals.extend_from_slice(z.as_slice());
+
+        WebGLObject {
+            vertices,
+            indices,
+            normals,
+        }
     }
 }
