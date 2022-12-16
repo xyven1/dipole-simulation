@@ -1,5 +1,5 @@
 # Dipole Simulation
-Started [this project](https://github.com/chinedufn/webgl-water-tutorial) as a foundation.
+Started with [this project](https://github.com/chinedufn/webgl-water-tutorial) as a foundation.
 
 This project was developed for the simulation of dipole moments in a way which is accessible on the web. I opted to use web assembly with Rust for this project as the performance benifit for the numerical calculations necessary for the simulation would be noticable. I used raw WebGL for the graphical display aspect of the project, as there was no complex graphics necessary and it gave fine grained control with high performance. For the simulation I wrote a 4th order Runge Kutta algorithm for linear and rotational mechanics. The input forces for the Runge Kutta were calculated using Coulomb's law across discrete charges. The dipoles were modeled as a physical dipole with two opposite charges seperated by an offset.
 
